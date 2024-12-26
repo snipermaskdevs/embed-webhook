@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enviar Mensagem para Discord</title>
+    <style>
+        body {  
+            font-family: Arial, sans-serif; 
+            background-color: #2f3136; 
+            color: #dcddde; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0;
+        }
+        .container { 
+            background-color: #36393f; 
+            padding: 6px; 
+            border-radius: 8px; 
+            width: 320px; 
+            max-width: 90%; 
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); 
+        }
+        h1 { 
+            text-align: center; 
+            color: #7289da; 
+            margin-bottom: 4px; 
+            font-size: 0.9rem; 
+        }
+        label { 
+            font-weight: bold; 
+            color: #b9bbbe; 
+            font-size: 0.6rem; 
+        }
+        input, textarea { 
+            width: 100%; 
+            padding: 3px; 
+            margin-top: 2px; 
+            margin-bottom: 4px; 
+            border: 1px solid #4f545c; 
+            background-color: #2f3136; 
+            color: #dcddde; 
+            font-size: 0.7rem; 
+            border-radius: 4px; 
+        }
+        input[type="checkbox"] {
+            width: 10px;
+            height: 10px;
+            margin-right: 4px;
+            accent-color: #7289da;
+        }
+        label[for="timestamp"] {
+            font-size: 0.6rem;
+            color: #b9bbbe;
+            display: flex;
+            align-items: center;
+            margin-top: 4px;
+        }
+        label[for="timestamp"] input[type="checkbox"] {
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        button { 
+            width: 100%; 
+            padding: 4px; 
+            background-color: #7289da; 
+            color: white; 
+            border: none; 
+            border-radius: 4px; 
+            font-size: 0.7rem; 
+            cursor: pointer; 
+            transition: background-color 0.3s; 
+            margin-top: 4px; 
+        }
+        button:hover { 
+            background-color: #5a6fbf; 
+        }
+        button:active { 
+            background-color: #4b5d9c; 
+        }
+        .note { 
+            font-size: 0.6rem; 
+            color: #b9bbbe; 
+            text-align: center; 
+            margin-top: 4px; 
+        }
+        .error { 
+            color: #ff0000; 
+            font-size: 0.6rem; 
+            margin-top: 4px; 
+            text-align: center;
+        }
+    
+        /* Media Queries for Mobile */
+        @media (max-width: 600px) {
+            .container { 
+                width: 280px; 
+                padding: 8px;
+            }
+            h1 { 
+                font-size: 0.8rem; 
+            }
+            input, textarea { 
+                font-size: 0.65rem; 
+                padding: 4px;
+            }
+            button { 
+                font-size: 0.65rem; 
+                padding: 5px;
+            }
+            .note, .error { 
+                font-size: 0.55rem; 
+            }
+        }
+    
+        /* Media Queries for Tablets */
+        @media (max-width: 768px) {
+            .container { 
+                width: 300px; 
+                padding: 10px;
+            }
+            h1 { 
+                font-size: 0.85rem; 
+            }
+            input, textarea { 
+                font-size: 0.7rem; 
+                padding: 5px;
+            }
+            button { 
+                font-size: 0.7rem; 
+                padding: 6px;
+            }
+        }
+    </style>          
+    
+    <script>
+        async function enviarMensagem() {
+            const webhookUrl = document.getElementById('webhookUrl').value;
+            const mensagem = document.getElementById('mensagem').value;
+            const title = document.getElementById('title').value;
+            const color = document.getElementById('color').value;
+            const imageUrl = document.getElementById('imageUrl').value;
+            const thumbnailUrl = document.getElementById('thumbnailUrl').value;
+            const authorName = document.getElementById('authorName').value;
+            const authorImage = document.getElementById('authorImage').value;
+            const footerText = document.getElementById('footerText').value;
+            const footerIcon = document.getElementById('footerIcon').value;
+            const timestamp = document.getElementById('timestamp').checked;
+
+            // Validação dos campos obrigatórios
+            if (!webhookUrl) {
+                document.getElementById('error').textContent = "Por favor, insira o webhook.";
+                return;
+            }
+
+            // Remover mensagens de erro caso existam
+            document.getElementById('error').textContent = "";
+
+            // Configuração do embed
+            const embed = {
+                description: mensagem
+            };
+
+            if (title) embed.title = title;
+            if (color) embed.color = parseInt(color.replace('#', ''), 16);
+            if (imageUrl) embed.image = { url: imageUrl };
+            if (thumbnailUrl) embed.thumbnail = { url: thumbnailUrl };
+            if (authorName) embed.author = { name: authorName };
+            if (authorImage) embed.author.icon_url = authorImage;
+            if (footerText) embed.footer = { text: footerText, icon_url: footerIcon };
+            if (timestamp) embed.timestamp = new Date().toISOString();
+
+            // Corpo da mensagem
+            const body = {
+                embeds: [embed]
+            };
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (response.ok) {
+                    alert("Mensagem enviada com sucesso!");
+                    limparCampos();
+                } else {
+                    const error = await response.json();
+                    console.error(error);
+                    alert("Erro ao enviar mensagem. Verifique o console para mais detalhes.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Erro ao conectar ao Discord.");
+            }
+        }
+
+        function limparCampos() {
+            document.getElementById('webhookUrl').value = '';
+            document.getElementById('title').value = '';
+            document.getElementById('color').value = '';
+            document.getElementById('imageUrl').value = '';
+            document.getElementById('thumbnailUrl').value = '';
+            document.getElementById('mensagem').value = '';
+            document.getElementById('authorName').value = '';
+            document.getElementById('authorImage').value = '';
+            document.getElementById('footerText').value = '';
+            document.getElementById('footerIcon').value = '';
+            document.getElementById('timestamp').checked = false;
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1>Enviar Mensagem para Discord</h1>
+        <label for="webhookUrl">URL do Webhook:</label>
+        <input type="text" id="webhookUrl" placeholder="Cole o URL do Webhook aqui">
+
+        <label for="title">Título do Embed:</label>
+        <input type="text" id="title" placeholder="Título do Embed">
+
+        <label for="color">Cor do Embed:</label>
+        <input type="text" id="color" placeholder="Exemplo: #FF5733">
+
+        <label for="imageUrl">URL da Imagem:</label>
+        <input type="text" id="imageUrl" placeholder="URL da imagem">
+
+        <label for="thumbnailUrl">URL do Thumbnail:</label>
+        <input type="text" id="thumbnailUrl" placeholder="URL do Thumbnail">
+
+        <label for="authorName">Nome do Autor:</label>
+        <input type="text" id="authorName" placeholder="Nome do autor">
+
+        <label for="authorImage">Imagem do Autor (URL):</label>
+        <input type="text" id="authorImage" placeholder="URL da imagem do autor">
+
+        <label for="footerText">Texto do Footer:</label>
+        <input type="text" id="footerText" placeholder="Texto do footer">
+
+        <label for="footerIcon">Ícone do Footer (URL):</label>
+        <input type="text" id="footerIcon" placeholder="Ícone do footer">
+
+        <label for="timestamp">
+            <input type="checkbox" id="timestamp"> Incluir timestamp
+        </label>
+
+        <label for="mensagem">Mensagem:</label>
+        <textarea id="mensagem" rows="4" placeholder="Digite sua mensagem..."></textarea>
+
+        <button onclick="limparCampos()">Limpar Campos</button>
+        <button onclick="enviarMensagem()">Enviar Mensagem</button>
+
+        <p class="note">* Certifique-se de que o webhook é válido e ativo.</p>
+        
+        <p id="error" class="error"></p> <!-- Mensagem de erro -->
+    </div>
+</body>
+</html>
